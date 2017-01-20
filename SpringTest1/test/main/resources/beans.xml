@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans     
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+        
+        <context:component-scan base-package="com.test.paditang.entity"/>
+        <context:component-scan base-package="com.test.paditang.event"/>
+	<bean id="car1" class="com.test.paditang.entity.Car">
+		<property name="brand" value="BYD"/>
+		<property name="color" value="white"/>
+		<property name="maxSpeed" value="200" />
+	</bean>
+	
+	<bean class="com.test.paditang.event.MailSendListener"/>
+	<!-- 增强测试 -->
+	<bean id="greetingAdvice" class="com.test.paditang.aop.adivce.GreetingBeforeAdvice"/>
+	<bean id="greetingAfter"  class="com.test.paditang.aop.adivce.GreetingAfterAdvice"/>
+	<bean id="greetingAround" class="com.test.paditang.aop.adivce.GreetingInterceptor"/>
+	<bean id="target" class="com.test.paditang.aop.adivce.NaiveWaiter"/>
+	<bean id="waiter" class="org.springframework.aop.framework.ProxyFactoryBean"
+		p:proxyInterfaces="com.test.paditang.aop.adivce.Waiter"
+		p:interceptorNames="greetingAdvice,greetingAfter,greetingAround"
+		p:target-ref="target"/>
+		
+	<!-- 静态普通方法切面测试 -->
+	<bean id="waiterTarget" class="com.test.paditang.aop.advisor.Waiter"/>
+	<bean id="sellerTarget" class="com.test.paditang.aop.advisor.Seller"/>
+    <bean id="greetingAdvisor" class="com.test.paditang.aop.advisor.GreetingAdvisor"
+    		p:advice-ref="greetingAdvice"/>
+    		
+    <bean id="parent" abstract="true"
+    	class="org.springframework.aop.framework.ProxyFactoryBean"
+    	p:interceptorNames="greetingAdvisor"
+    	p:proxyTargetClass="true"/>
+    <bean id="waiter2" parent="parent" p:target-ref="waiterTarget"/>
+    <bean id="seller" parent="parent" p:target-ref="sellerTarget"/>
+    
+    <!-- 动态切面测试 -->
+    <bean id="dynamicAdvisor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+    	<property name="pointcut">
+    		<bean class="com.test.paditang.aop.advisor.GreetingDynamicPointcut"/>
+    	</property>
+    	<property name="advice">
+    		<bean class="com.test.paditang.aop.adivce.GreetingBeforeAdvice"/>
+    	</property>
+    </bean>
+    <bean id="waiter3" class="org.springframework.aop.framework.ProxyFactoryBean"
+    	p:interceptorNames="dynamicAdvisor"
+    	p:target-ref="waiterTarget"
+    	p:proxyTargetClass="true"/>
+</beans>
